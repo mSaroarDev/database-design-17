@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id               BigInt             @id @default(autoincrement()) @db.UnsignedBigInt
+  firstName        String             @db.VarChar(24)
+  lastName         String             @db.VarChar(24)
+  email            String             @unique(map: "users_email_unique") @db.VarChar(50)
+  mobile           String             @db.VarChar(11)
+  password         String             @db.VarChar(24)
+  otp              String             @db.VarChar(6)
+  created_at       DateTime           @default(now()) @db.Timestamp(0)
+  updated_at       DateTime           @default(now()) @db.Timestamp(0)
+  categories       categories[]
+  products         products[]
+  customers        customers[]
+  invoices         invoices[]
+  invoice_products invoice_products[]
+}
+
+model categories {
+  id           Int        @id @default(autoincrement())
+  categoryName String     @db.VarChar(50)
+  user_id      BigInt     @db.UnsignedBigInt
+  users        users      @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at   DateTime   @default(now()) @db.Timestamp(0)
+  updated_at   DateTime   @default(now()) @db.Timestamp(0)
+  products     products[]
+}
+
+model customers {
+  id         BigInt     @id @default(autoincrement())
+  user_name  String     @db.VarChar(50)
+  email      String     @db.VarChar(50)
+  mobile     String     @db.VarChar(11)
+  user_id    BigInt     @db.UnsignedBigInt
+  created_at DateTime   @default(now()) @db.Timestamp(0)
+  updated_at DateTime   @default(now()) @db.Timestamp(0)
+  users      users      @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  invoices   invoices[]
+}
+
+model products {
+  id               BigInt             @id @default(autoincrement())
+  user_id          BigInt             @db.UnsignedBigInt
+  users            users              @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  category_id      Int
+  categories       categories         @relation(fields: [category_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  name             String             @db.VarChar(50)
+  price            String             @db.VarChar(24)
+  unit             String             @db.VarChar(24)
+  img_url          String             @db.VarChar(500)
+  created_at       DateTime           @default(now()) @db.Timestamp(0)
+  updated_at       DateTime           @default(now()) @db.Timestamp(0)
+  invoice_products invoice_products[]
+}
+
+model invoices {
+  id               BigInt             @id @unique() @default(autoincrement())
+  total            String             @db.VarChar(50)
+  discount         String             @db.VarChar(50)
+  vat              String             @db.VarChar(50)
+  payable          String             @db.VarChar(50)
+  user_id          BigInt             @db.UnsignedBigInt
+  customer_id      BigInt             @db.UnsignedBigInt
+  created_at       DateTime           @default(now()) @db.Timestamp(0)
+  updated_at       DateTime           @default(now()) @db.Timestamp(0)
+  users            users              @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  customers        customers          @relation(fields: [customer_id], references: [id])
+  invoice_products invoice_products[]
+}
+
+model invoice_products {
+  id         BigInt   @id @default(autoincrement())
+  invoice_id BigInt
+  product_id BigInt
+  user_id    BigInt
+  qty        BigInt
+  sale_price String   @db.VarChar(50)
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @db.Timestamp(0)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  invoices   invoices @relation(fields: [invoice_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  products   products @relation(fields: [product_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+}
